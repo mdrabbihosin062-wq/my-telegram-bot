@@ -9,7 +9,7 @@ from telegram.ext import (
     CallbackQueryHandler
 )
 
-BOT_TOKEN = "8944082538:AAH0ngKCVlLElOSGMMKXOx2A5BspFCWG1NM" 
+BOT_TOKEN = "8754613225:AAGhf0tpxlSSYQoMw2Twi7qwa6fxsDtApSI" 
 ADMIN_ID = 6516107821 
 WEB_APP_URL = "https://chipper-dieffenbachia-389115.netlify.app/" 
 
@@ -92,3 +92,4 @@ if __name__ == '__main__':
     
     print("Bot is running...")
     app.run_polling()
+
