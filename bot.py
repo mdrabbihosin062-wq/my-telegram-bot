@@ -11,7 +11,9 @@ from telegram.ext import (
 
 BOT_TOKEN = "8754613225:AAGhf0tpxlSSYQoMw2Twi7qwa6fxsDtApSI" 
 ADMIN_ID = 6516107821 
-WEB_APP_URL = "https://chipper-dieffenbachia-389115.netlify.app/" 
+
+# Netlify বাদ দিয়ে সরাসরি GitHub Pages এর নতুন ডিরেক্ট লিংক
+WEB_APP_URL = "https://mdrabbihosin062-wq.github.io/my-telegram-bot/" 
 
 VIP_LINKS = (
     "🔞 **VIP PREMIUM CHANNELS** 🔞\n\n"
@@ -92,4 +94,3 @@ if __name__ == '__main__':
     
     print("Bot is running...")
     app.run_polling()
-
