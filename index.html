@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Payment</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #1c1c1e; color: #fff; padding: 20px; margin: 0; }
+        .card { background: #2c2c2e; padding: 20px; border-radius: 12px; text-align: center; }
+        h2 { color: #0088cc; margin-top: 0; }
+        .number-box { background: #3a3a3c; padding: 10px; border-radius: 8px; margin: 10px 0; font-weight: bold; }
+        input { width: 90%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>VIP Membership Payment</h2>
+        <p>নিচের নম্বরে <b>Personal Send Money</b> করুন:</p>
+        <div class="number-box">bKash / Nagad: 01700000000</div>
+        
+        <form id="payForm">
+            <input type="text" id="phone" placeholder="আপনার ফোন নম্বর" required><br>
+            <input type="text" id="trxId" placeholder="TrxID (ট্রানজেকশন আইডি)" required><br>
+            <button type="submit">Submit Payment</button>
+        </form>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        document.getElementById('payForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const phone = document.getElementById('phone').value;
+            const trxId = document.getElementById('trxId').value;
+            
+            tg.sendData(JSON.stringify({ phone: phone, trxId: trxId }));
+            tg.close();
+        });
+    </script>
+</body>
+</html>
