@@ -3,42 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Payment</title>
+    <title>Secure Payment</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: #1c1c1e; color: #fff; padding: 20px; margin: 0; }
-        .card { background: #2c2c2e; padding: 20px; border-radius: 12px; text-align: center; }
-        h2 { color: #0088cc; margin-top: 0; }
-        .number-box { background: #3a3a3c; padding: 10px; border-radius: 8px; margin: 10px 0; font-weight: bold; }
-        input { width: 90%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; font-size: 16px; }
-        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #f5f5f7; display: flex; justify-content: center; padding: 10px; }
+        .wrapper { width: 100%; max-width: 400px; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { text-align: center; padding: 15px; border-bottom: 1px solid #eee; }
+        .header img { height: 35px; }
+        .amount-box { text-align: center; padding: 15px; font-size: 22px; font-weight: bold; color: #333; }
+        .methods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 15px; }
+        .method-btn { border: 1px solid #ddd; padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; background: #fff; }
+        .method-btn.active { border-color: #e2136e; background: #fff0f5; }
+        .method-btn img { height: 25px; display: block; margin: 0 auto 5px; }
+        .pay-card { background: #e2136e; color: white; padding: 20px; border-radius: 10px; margin: 15px; transition: 0.3s; }
+        .pay-card.nagad { background: #f7941d; }
+        .instruction { font-size: 13px; margin-bottom: 8px; line-height: 1.4; }
+        .copy-box { background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin: 10px 0; font-weight: bold; }
+        .copy-btn { background: #fff; color: #333; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        input { width: 100%; padding: 12px; border-radius: 6px; border: none; margin-top: 10px; font-size: 14px; outline: none; }
+        .btn-submit { width: calc(100% - 30px); margin: 0 15px 15px; padding: 14px; background: #c20d5e; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-submit.nagad { background: #d87d12; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>VIP Membership Payment</h2>
-        <p>নিচের নম্বরে <b>Personal Send Money</b> করুন:</p>
-        <div class="number-box">bKash / Nagad: 01700000000</div>
-        
-        <form id="payForm">
-            <input type="text" id="phone" placeholder="আপনার ফোন নম্বর" required><br>
-            <input type="text" id="trxId" placeholder="TrxID (ট্রানজেকশন আইডি)" required><br>
-            <button type="submit">Submit Payment</button>
-        </form>
+
+<div class="wrapper">
+    <div class="header">
+        <h3 id="gateway-title" style="color:#e2136e;">bKash Payment</h3>
+    </div>
+    
+    <div class="amount-box">৳ 500</div>
+
+    <div class="methods">
+        <div class="method-btn active" onclick="selectMethod('bkash')">
+            <b>bKash</b>
+        </div>
+        <div class="method-btn" onclick="selectMethod('nagad')">
+            <b>Nagad</b>
+        </div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        document.getElementById('payForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const phone = document.getElementById('phone').value;
-            const trxId = document.getElementById('trxId').value;
+    <form id="payForm">
+        <div class="pay-card" id="card-bg">
+            <div class="instruction">• Send Money করুন নিচের নম্বরে:</div>
+            <div class="copy-box">
+                <span id="num">01859620810</span>
+                <button type="button" class="copy-btn" onclick="copyNum()">COPY</button>
+            </div>
+            <div class="instruction">• পেমেন্ট শেষে TrxID এবং ফোন নম্বর নিচে বসান:</div>
             
-            tg.sendData(JSON.stringify({ phone: phone, trxId: trxId }));
-            tg.close();
-        });
-    </script>
+            <input type="text" id="phone" placeholder="আপনার ফোন নম্বর" required>
+            <input type="text" id="trxId" placeholder="TrxID (ট্রানজেকশন আইডি)" required>
+        </div>
+
+        <button type="submit" class="btn-submit" id="sub-btn">ভেরিফাই করুন</button>
+    </form>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    let currentMethod = 'bKash';
+
+    function selectMethod(method) {
+        currentMethod = method;
+        const card = document.getElementById('card-bg');
+        const btn = document.getElementById('sub-btn');
+        const title = document.getElementById('gateway-title');
+        const btns = document.querySelectorAll('.method-btn');
+        
+        btns.forEach(b => b.classList.remove('active'));
+
+        if(method === 'nagad') {
+            btns[1].classList.add('active');
+            card.classList.add('nagad');
+            btn.classList.add('nagad');
+            title.innerText = 'Nagad Payment';
+            title.style.color = '#f7941d';
+        } else {
+            btns[0].classList.add('active');
+            card.classList.remove('nagad');
+            btn.classList.remove('nagad');
+            title.innerText = 'bKash Payment';
+            title.style.color = '#e2136e';
+        }
+    }
+
+    function copyNum() {
+        const num = document.getElementById('num').innerText;
+        navigator.clipboard.writeText(num);
+        alert('নম্বর কপি হয়েছে: ' + num);
+    }
+
+    document.getElementById('payForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const phone = document.getElementById('phone').value;
+        const trxId = document.getElementById('trxId').value;
+        
+        tg.sendData(JSON.stringify({ 
+            method: currentMethod,
+            phone: phone, 
+            trxId: trxId 
+        }));
+        tg.close();
+    });
+</script>
+
 </body>
 </html>
