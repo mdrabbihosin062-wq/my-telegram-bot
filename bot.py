@@ -16,16 +16,15 @@ from telegram.ext import (
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 # --- Flask Server (Render-কে সচল রাখার জন্য) ---
-app = Flask(__name__)
+web_app = Flask(__name__)
 
-@app.route('/')
+@web_app.route('/')
 def home():
     return "Bot is alive and running 24/7!"
 
 def run_flask():
-    # Render স্বয়ংক্রিয়ভাবে একটি PORT প্রদান করে
     port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
+    web_app.run(host='0.0.0.0', port=port)
 
 # --- Config & Variables ---
 TOKEN = os.environ.get("BOT_TOKEN", "8754613225:AAGhf0tpxlSSYQoMw2Twi7qwa6fxsDtApSI")
@@ -109,7 +108,6 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "✅ **আপনার পেমেন্ট নম্বরটি জমা নেওয়া হয়েছে!**\nএডমিন নম্বর মিলিয়ে ভেরিফাই করার পর আপনাকে VIP চ্যানেলগুলোর লিংক পাঠাবে।"
         )
 
-        # এডমিন নোটিফিকেশন বাটন
         admin_keyboard = [
             [InlineKeyboardButton("✅ Approve (2 Links / ৳২০০)", callback_data=f"approve_2_{user.id}")],
             [InlineKeyboardButton("✅ Approve (5 Links / ৳৫০০)", callback_data=f"approve_5_{user.id}")],
@@ -143,7 +141,7 @@ async def admin_approval_handler(update: Update, context: ContextTypes.DEFAULT_T
     
     if data.startswith("approve_"):
         parts = data.split("_")
-        link_count = parts[1] # "2" or "5"
+        link_count = parts[1]
         user_id = int(parts[2])
         
         if link_count == "2":
@@ -184,21 +182,19 @@ async def admin_approval_handler(update: Update, context: ContextTypes.DEFAULT_T
 
 # --- Main Execution ---
 def main():
-    # ব্যাকগ্রাউন্ডে Flask চালু করা
     flask_thread = Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
     
-    # টেলিগ্রাম বট চালু করা
-    app = ApplicationBuilder().token(TOKEN).build()
+    bot_app = ApplicationBuilder().token(TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button_handler, pattern="^(start_payment|pkg_200|pkg_500)$"))
-    app.add_handler(CallbackQueryHandler(admin_approval_handler, pattern="^(approve_|reject_)"))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
+    bot_app.add_handler(CommandHandler("start", start))
+    bot_app.add_handler(CallbackQueryHandler(button_handler, pattern="^(start_payment|pkg_200|pkg_500)$"))
+    bot_app.add_handler(CallbackQueryHandler(admin_approval_handler, pattern="^(approve_|reject_)"))
+    bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
 
     print("Bot and Web Server are running...")
-    app.run_polling()
+    bot_app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
