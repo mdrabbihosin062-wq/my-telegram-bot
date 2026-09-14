@@ -1,13 +1,35 @@
+import os
 import logging
+from threading import Thread
+from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+from telegram.ext import (
+    ApplicationBuilder, 
+    CommandHandler, 
+    MessageHandler, 
+    CallbackQueryHandler, 
+    filters, 
+    ContextTypes
+)
 
 # Logging Configuration
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-# --- Configuration ---
-TOKEN = "8754613225:AAGhf0tpxlSSYQoMw2Twi7qwa6fxsDtApSI"
-ADMIN_ID = 6516107821
+# --- Flask Server (Render-কে সচল রাখার জন্য) ---
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is alive and running 24/7!"
+
+def run_flask():
+    # Render স্বয়ংক্রিয়ভাবে একটি PORT প্রদান করে
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+# --- Config & Variables ---
+TOKEN = os.environ.get("BOT_TOKEN", "8754613225:AAGhf0tpxlSSYQoMw2Twi7qwa6fxsDtApSI")
+ADMIN_ID = int(os.environ.get("ADMIN_ID", 6516107821))
 
 # VIP প্রাইভেট চ্যানেলের লিংকসমূহ
 VIP_2_LINKS = """
@@ -35,6 +57,7 @@ PREVIEW_TEXT = """
 টাকা পাঠানোর পর নিচের **"💳 পেমেন্ট নিশ্চিত করুন"** বাটনে চাপ দিন।
 """
 
+# --- Bot Command & Button Handlers ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("💳 পেমেন্ট নিশ্চিত করুন", callback_data="start_payment")]
@@ -86,7 +109,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "✅ **আপনার পেমেন্ট নম্বরটি জমা নেওয়া হয়েছে!**\nএডমিন নম্বর মিলিয়ে ভেরিফাই করার পর আপনাকে VIP চ্যানেলগুলোর লিংক পাঠাবে।"
         )
 
-        # এডমিনের কাছে ৩টি কন্ট্রোল বাটনসহ নোটিফিকেশন পাঠানো
+        # এডমিন নোটিফিকেশন বাটন
         admin_keyboard = [
             [InlineKeyboardButton("✅ Approve (2 Links / ৳২০০)", callback_data=f"approve_2_{user.id}")],
             [InlineKeyboardButton("✅ Approve (5 Links / ৳৫০০)", callback_data=f"approve_5_{user.id}")],
@@ -159,7 +182,14 @@ async def admin_approval_handler(update: Update, context: ContextTypes.DEFAULT_T
         except Exception as e:
             await query.edit_message_text(text=f"{query.message.text}\n\n❌ **Failed to reject: {e}**")
 
+# --- Main Execution ---
 def main():
+    # ব্যাকগ্রাউন্ডে Flask চালু করা
+    flask_thread = Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+    
+    # টেলিগ্রাম বট চালু করা
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
@@ -167,7 +197,7 @@ def main():
     app.add_handler(CallbackQueryHandler(admin_approval_handler, pattern="^(approve_|reject_)"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
 
-    print("Bot is running...")
+    print("Bot and Web Server are running...")
     app.run_polling()
 
 if __name__ == "__main__":
